@@ -11,7 +11,7 @@ class SNAKE:
         self.body = [Vector2(5,10), Vector2(4,10), Vector2(3,10)]
         self.direction = Vector2(0,0)
         self.new_block = False
-        
+        dsa ='asd'
         # Load images for snake parts
         self.head_up = pygame.image.load('Graphics/head_up.png').convert_alpha()
         self.head_down = pygame.image.load('Graphics/head_down.png').convert_alpha()
