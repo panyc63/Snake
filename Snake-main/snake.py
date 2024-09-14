@@ -119,6 +119,7 @@ class BULLET:
         self.color = (0, 0, 255)  # BLUE color
 
     def move(self):
+        
         self.position += self.direction * self.speed
 
     def draw_bullet(self):
@@ -131,13 +132,26 @@ class MAIN:
         self.snake = SNAKE()
         self.fruit = FRUIT()
         self.bullets = []
+        #get time of inititation which is 0 when starting
+        self.last_bullet=pygame.time.get_ticks()
 
     def update(self):
         self.snake.move_snake()
         self.update_bullets()
-        self.check_collision()
+        self.check_eat()
         self.check_fail()
+        self.spawn_startbullet()
 
+#make sure the bullet only spawn when snake move
+    def spawn_startbullet(self):
+        if self.snake.direction != Vector2(0, 0):
+            C_time = pygame.time.get_ticks()
+            #after passing 2 second and spawn bullet
+            if C_time - self.last_bullet >= 2000:
+                self.spawn_bullet()
+                #reset time to current, make it 0 again
+                self.last_bullet = C_time
+        
     def update_bullets(self):
         for bullet in self.bullets[:]:
             bullet.move()
@@ -188,12 +202,12 @@ class MAIN:
             bullet.draw_bullet()
         self.draw_score()
 
-    def check_collision(self):
+    def check_eat(self):
         if self.fruit.pos == self.snake.body[0]:
             self.fruit.randomize()
             self.snake.add_block()
             self.snake.play_crunch_sound()
-
+#game over if hit its own body
     def check_fail(self):
         if not 0 <= self.snake.body[0].x < cell_number or not 0 <= self.snake.body[0].y < cell_number:
             self.game_over()
@@ -242,34 +256,33 @@ background_image = pygame.image.load('Snake-main/Graphics/background.jpg').conve
 SCREEN_UPDATE = pygame.USEREVENT
 pygame.time.set_timer(SCREEN_UPDATE, 150)
 
-SPAWN_BULLET = pygame.USEREVENT + 1
-pygame.time.set_timer(SPAWN_BULLET, 2000)  # Spawn bullet every 2 seconds
+
 
 main_game = MAIN()
 
 while True:
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
         if event.type == SCREEN_UPDATE:
             main_game.update()
-        if event.type == SPAWN_BULLET:
-            main_game.spawn_bullet()
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
                 if main_game.snake.direction.y != 1:
                     main_game.snake.direction = Vector2(0, -1)
-            if event.key == pygame.K_RIGHT:
+            elif event.key == pygame.K_RIGHT:
                 if main_game.snake.direction.x != -1:
                     main_game.snake.direction = Vector2(1, 0)
-            if event.key == pygame.K_DOWN:
+            elif event.key == pygame.K_DOWN:
                 if main_game.snake.direction.y != -1:
                     main_game.snake.direction = Vector2(0, 1)
-            if event.key == pygame.K_LEFT:
+            elif event.key == pygame.K_LEFT:
                 if main_game.snake.direction.x != 1:
                     main_game.snake.direction = Vector2(-1, 0)
 
+    
     #screen.fill((175, 215, 70))  # Optional: Clear the screen with a color before drawing
     main_game.draw_elements()
     pygame.display.update()
