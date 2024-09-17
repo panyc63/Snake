@@ -1,9 +1,11 @@
-import pygame, sys, random
+import pygame, sys, random ,os
 from pygame.math import Vector2
+
 
 # Constants
 cell_size = 40
 cell_number = 20
+cwd = os.getcwd()
 
 class SNAKE:
     def __init__(self):
@@ -13,24 +15,24 @@ class SNAKE:
         self.new_block = False
         test=0
         # Load images for snake parts
-        self.head_up = pygame.image.load('Snake-main/Graphics/head_up.png').convert_alpha()
-        self.head_down = pygame.image.load('Snake-main/Graphics/head_down.png').convert_alpha()
-        self.head_right = pygame.image.load('Snake-main/Graphics/head_right.png').convert_alpha()
-        self.head_left = pygame.image.load('Snake-main/Graphics/head_left.png').convert_alpha()
+        self.head_up = pygame.image.load(cwd+'/Snake-main/Graphics/head_up.png').convert_alpha()
+        self.head_down = pygame.image.load(cwd+'/Snake-main/Graphics/head_down.png').convert_alpha()
+        self.head_right = pygame.image.load(cwd+'/Snake-main/Graphics/head_right.png').convert_alpha()
+        self.head_left = pygame.image.load(cwd+'/Snake-main/Graphics/head_left.png').convert_alpha()
         
-        self.tail_up = pygame.image.load('Snake-main/Graphics/tail_up.png').convert_alpha()
-        self.tail_down = pygame.image.load('Snake-main/Graphics/tail_down.png').convert_alpha()
-        self.tail_right = pygame.image.load('Snake-main/Graphics/tail_right.png').convert_alpha()
-        self.tail_left = pygame.image.load('Snake-main/Graphics/tail_left.png').convert_alpha()
+        self.tail_up = pygame.image.load(cwd+'/Snake-main/Graphics/tail_up.png').convert_alpha()
+        self.tail_down = pygame.image.load(cwd+'/Snake-main/Graphics/tail_down.png').convert_alpha()
+        self.tail_right = pygame.image.load(cwd+'/Snake-main/Graphics/tail_right.png').convert_alpha()
+        self.tail_left = pygame.image.load(cwd+'/Snake-main/Graphics/tail_left.png').convert_alpha()
 
-        self.body_vertical = pygame.image.load('Snake-main/Graphics/body_vertical.png').convert_alpha()
-        self.body_horizontal = pygame.image.load('Snake-main/Graphics/body_horizontal.png').convert_alpha()
+        self.body_vertical = pygame.image.load(cwd+'/Snake-main/Graphics/body_vertical.png').convert_alpha()
+        self.body_horizontal = pygame.image.load(cwd+'/Snake-main/Graphics/body_horizontal.png').convert_alpha()
 
-        self.body_tr = pygame.image.load('Snake-main/Graphics/body_tr.png').convert_alpha()
-        self.body_tl = pygame.image.load('Snake-main/Graphics/body_tl.png').convert_alpha()
-        self.body_br = pygame.image.load('Snake-main/Graphics/body_br.png').convert_alpha()
-        self.body_bl = pygame.image.load('Snake-main/Graphics/body_bl.png').convert_alpha()
-        self.crunch_sound = pygame.mixer.Sound('Snake-main/Sound/crunch.wav')
+        self.body_tr = pygame.image.load(cwd+'/Snake-main/Graphics/body_tr.png').convert_alpha()
+        self.body_tl = pygame.image.load(cwd+'/Snake-main/Graphics/body_tl.png').convert_alpha()
+        self.body_br = pygame.image.load(cwd+'/Snake-main/Graphics/body_br.png').convert_alpha()
+        self.body_bl = pygame.image.load(cwd+'/Snake-main/Graphics/body_bl.png').convert_alpha()
+        self.crunch_sound = pygame.mixer.Sound(cwd+'/Snake-main/Sound/crunch.wav')
 
     def draw_snake(self):
         self.update_head_graphics()
@@ -109,6 +111,15 @@ class FRUIT:
         self.x = random.randint(0, cell_number - 1)
         self.y = random.randint(0, cell_number - 1)
         self.pos = Vector2(self.x, self.y)
+
+class WALL:
+    def __init__(self,position,direction):
+        self.position = position
+        self.direction = direction
+
+    def create_Wall():
+        wall_rect = pygame.Rect(int(self.position.x * cell_size), int(self.position.y * cell_size), cell_size, cell_size)
+        screen.blit(middle_wall, wall_rect)
 
 class BULLET:
     def __init__(self, position, direction):
@@ -245,12 +256,13 @@ cell_size = 40
 cell_number = 20
 screen = pygame.display.set_mode((cell_number * cell_size, cell_number * cell_size))
 clock = pygame.time.Clock()
-apple = pygame.image.load('Snake-main/Graphics/apple.png').convert_alpha()
-apple2 =pygame.image.load('Snake-main/Graphics/apple2.png').convert_alpha()
-game_font = pygame.font.Font('Snake-main/Font/PoetsenOne-Regular.ttf', 25)
+apple = pygame.image.load(cwd+ '/Snake-main/Graphics/apple.png').convert_alpha()
+apple2 =pygame.image.load(cwd+'/Snake-main/Graphics/apple2.png').convert_alpha()
+#middle_wall =pygame.image.load(cwd+'/Snake-main/Graphics/middle_wall.png').convert_alpha()
+game_font = pygame.font.Font(cwd+'/Snake-main/Font/PoetsenOne-Regular.ttf', 25)
 
 # Background image
-background_image = pygame.image.load('Snake-main/Graphics/background.jpg').convert()
+background_image = pygame.image.load(cwd+'/Snake-main/Graphics/background.jpg').convert()
 
 # Setup timers
 SCREEN_UPDATE = pygame.USEREVENT
