@@ -113,13 +113,22 @@ class FRUIT:
         self.pos = Vector2(self.x, self.y)
 
 class WALL:
-    def __init__(self,position,direction):
-        self.position = position
-        self.direction = direction
+    def __init__(self):
+        self.body = [Vector2(5,6), Vector2(4,6), Vector2(3,6)]
+        self.middle_wall = pygame.image.load(cwd+'/Snake-main/Graphics/middle_wall.png').convert_alpha()
 
-    def create_Wall():
-        wall_rect = pygame.Rect(int(self.position.x * cell_size), int(self.position.y * cell_size), cell_size, cell_size)
-        screen.blit(middle_wall, wall_rect)
+    def create_Wall(self):
+         for index, block in enumerate(self.body):
+            x_pos = int(block.x * cell_size)
+            y_pos = int(block.y * cell_size)
+            wall_rect = pygame.Rect(x_pos, y_pos, cell_size, cell_size)
+            if index == 0:
+                screen.blit(right_wall, wall_rect)
+            elif index == len(self.body) -1 :
+                screen.blit(left_wall, wall_rect)
+            else:
+                screen.blit(middle_wall, wall_rect)
+
 
 class BULLET:
     def __init__(self, position, direction):
@@ -142,6 +151,7 @@ class MAIN:
     def __init__(self):
         self.snake = SNAKE()
         self.fruit = FRUIT()
+        self.wall = WALL()
         self.bullets = []
         #get time of inititation which is 0 when starting
         self.last_bullet=pygame.time.get_ticks()
@@ -164,6 +174,12 @@ class MAIN:
                 self.last_bullet = C_time
         
     def update_bullets(self):
+        wallRect = []
+        hitWall = False  
+        for i in self.wall.body:
+            wallRect.append([(pygame.Rect(int(i.x * cell_size) ,int(i.y * cell_size),cell_size, cell_size))])
+        
+
         for bullet in self.bullets[:]:
             bullet.move()
             # Remove bullet once out of map
@@ -176,9 +192,23 @@ class MAIN:
                                           bullet.radius * 2, bullet.radius * 2)
                 snake_head_rect = pygame.Rect(int(self.snake.body[0].x * cell_size),
                                               int(self.snake.body[0].y * cell_size),
-                                              cell_size, cell_size)
+                                              cell_size, cell_size)                           
+                
+
                 if bullet_rect.colliderect(snake_head_rect):
                     self.game_over()
+
+                
+                for w in wallRect:
+                    if bullet_rect.colliderect(w[0]):
+                        hitWall = True
+                    elif snake_head_rect.colliderect(w[0]):
+                        self.game_over()
+
+                if hitWall:   
+                    self.bullets.remove(bullet)
+                    hitWall = False
+               
 
     def spawn_bullet(self):
         # Randomly decide which side to spawn from (0: top, 1: bottom, 2: left, 3: right)
@@ -204,11 +234,14 @@ class MAIN:
         bullet = BULLET(position, direction)
         self.bullets.append(bullet)
 
+
     def draw_elements(self):
         # Draw the background image
         screen.blit(background_image, (0, 0))
         self.fruit.draw_fruit()
         self.snake.draw_snake()
+        self.wall.create_Wall()
+
         for bullet in self.bullets:
             bullet.draw_bullet()
         self.draw_score()
@@ -258,7 +291,9 @@ screen = pygame.display.set_mode((cell_number * cell_size, cell_number * cell_si
 clock = pygame.time.Clock()
 apple = pygame.image.load(cwd+ '/Snake-main/Graphics/apple.png').convert_alpha()
 apple2 =pygame.image.load(cwd+'/Snake-main/Graphics/apple2.png').convert_alpha()
-#middle_wall =pygame.image.load(cwd+'/Snake-main/Graphics/middle_wall.png').convert_alpha()
+middle_wall =pygame.image.load(cwd+'/Snake-main/Graphics/middle_wall.png').convert_alpha()
+left_wall = pygame.image.load(cwd+'/Snake-main/Graphics/left_wall.png').convert_alpha()
+right_wall = pygame.image.load(cwd+'/Snake-main/Graphics/right_wall.png').convert_alpha()
 game_font = pygame.font.Font(cwd+'/Snake-main/Font/PoetsenOne-Regular.ttf', 25)
 
 # Background image
