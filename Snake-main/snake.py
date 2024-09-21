@@ -7,6 +7,144 @@ cell_size = 40
 cell_number = 20
 cwd = os.getcwd()
 
+##### Mik's Code #####
+
+main_menu = 0
+playing = 1
+game_end = 2
+
+game_state = main_menu
+
+button_colour = (100, 100, 255)
+hover_colour = (150, 150, 255)
+font_colour = (0, 0, 0)
+#font = pygame.font.SysFont(None, 25, True)
+
+screen = pygame.display.set_mode()
+pygame.display.set_caption("Snake Attack")
+
+# Button dimensions and positions
+button_width = 300
+button_height = 50
+start_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 360), (button_width, button_height))
+settings_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 420), (button_width, button_height))
+leaderscore_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 480), (button_width, button_height))
+quit_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 540), (button_width, button_height))
+
+#Main menu screen
+def main_menu_screen():
+
+    global game_state
+
+    game_menu = True
+
+    while game_menu:
+        
+        screen.blit(game_menu_image, (0, 0))
+
+        # Get mouse position
+        mouse_pos = pygame.mouse.get_pos()
+
+        # Check if mouse is over any button
+        start_hovered = start_button_rect.collidepoint(mouse_pos)
+        settings_hovered = settings_button_rect.collidepoint(mouse_pos)
+        leaderscore_hovered = leaderscore_button_rect.collidepoint(mouse_pos)
+        quit_hovered = quit_button_rect.collidepoint(mouse_pos)
+
+        # Hover effects
+        draw_button(start_button_rect, "Start", start_hovered)
+        draw_button(settings_button_rect, "Gameplay Settings", settings_hovered)
+        draw_button(leaderscore_button_rect, "Leaderscore", leaderscore_hovered)
+        draw_button(quit_button_rect, "Quit", quit_hovered)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+
+            #Check if button was pressed
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                #If Start Button was pressed
+                if start_button_rect.collidepoint(mouse_pos):
+                    print("Start button clicked")
+                    game_state = playing
+                    game_menu = False
+                #If Settings Button was pressed
+                elif settings_button_rect.collidepoint(mouse_pos):
+                    print("Gameplay Settings button clicked")
+                #If Leaderscore Button was pressed
+                elif leaderscore_button_rect.collidepoint(mouse_pos):
+                    print("Leaderscore button clicked")
+                #If Quit Button was pressed
+                elif quit_button_rect.collidepoint(mouse_pos):
+                    pygame.quit()
+                    sys.exit()
+
+        pygame.display.flip()
+
+def draw_button(rect, text, is_hovered):
+
+    # Choose color based on hover state
+    color = hover_colour if is_hovered else button_colour
+    pygame.draw.rect(screen, color, rect)
+    # Draw text on top of the button
+    text_surf = game_font.render(text, True, font_colour)
+    screen.blit(text_surf, (rect.x + (rect.width - text_surf.get_width()) // 2, rect.y + (rect.height - text_surf.get_height()) // 2))
+
+#End Game Screen
+def end_game_screen():
+    
+    global game_state
+
+    #Tinted death screen
+    tint_surface = pygame.Surface((cell_number*cell_size,cell_number*cell_size ), pygame.SRCALPHA)
+    tint_surface.fill((190,0,0,100))
+
+    #Retry & Quit buttons
+    button_width = 200
+    button_height = 50
+    restart_button_rect = pygame.Rect((cell_number*cell_size // 2 - button_width // 2, 400), (button_width, button_height))
+    quit_button_rect = pygame.Rect((cell_number*cell_size // 2 - button_width // 2, 460), (button_width, button_height))
+
+    end_screen = True
+
+    while end_screen:
+        
+        screen.blit(background_image, (0,0))
+        screen.blit(tint_surface, (0,0))
+        screen.blit(game_over_image, (cell_number*cell_size // 2 - game_over_image.get_width() // 2, 200))
+
+        # Get mouse position
+        mouse_pos = pygame.mouse.get_pos()
+
+        # Check if mouse is over any button
+        restart_hovered = restart_button_rect.collidepoint(mouse_pos)
+        quit_hovered = quit_button_rect.collidepoint(mouse_pos)
+
+        # Hover effects
+        draw_button(restart_button_rect, "Retry", restart_hovered)
+        draw_button(quit_button_rect, "Quit", quit_hovered)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                #If Restart Button pressed, start game again
+                if restart_button_rect.collidepoint(mouse_pos):
+                    main_game.snake.reset()  # Reset the snake
+                    game_state = playing  # Transition to playing state
+                    end_screen = False
+                    print("Restart button clicked")
+                #If Quit Button pressed, exit the game
+                elif quit_button_rect.collidepoint(mouse_pos):
+                    pygame.quit()
+                    sys.exit()
+
+        pygame.display.flip()
+
+##### Mik's Code #####
+
 class SNAKE:
     def __init__(self):
         # Initialize the snake
@@ -258,10 +396,14 @@ class MAIN:
 
         for block in self.snake.body[1:]:
             if block == self.snake.body[0]:
-                self.game_over()
+                self.reset()
 
 #game over MK 
     def game_over(self):
+        global game_state
+        game_state = game_end
+    
+    def reset(self):
         self.snake.reset()
         self.bullets = []
 
@@ -298,6 +440,8 @@ game_font = pygame.font.Font(cwd+'/Snake-main/Font/PoetsenOne-Regular.ttf', 25)
 
 # Background image
 background_image = pygame.image.load(cwd+'/Snake-main/Graphics/background.jpg').convert()
+game_menu_image = pygame.image.load(cwd+'/Snake-main/Graphics/screen_menu_image.jpg').convert()
+game_over_image = pygame.image.load(cwd+'/Snake-main/Graphics/game_over_image.png').convert_alpha()
 
 # Setup timers
 SCREEN_UPDATE = pygame.USEREVENT
@@ -313,24 +457,31 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-        if event.type == SCREEN_UPDATE:
-            main_game.update()
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP or event.key == pygame.K_w:
-                if main_game.snake.direction.y != 1:
-                    main_game.snake.direction = Vector2(0, -1)
-            elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                if main_game.snake.direction.x != -1:
-                    main_game.snake.direction = Vector2(1, 0)
-            elif event.key == pygame.K_DOWN  or event.key == pygame.K_s:
-                if main_game.snake.direction.y != -1:
-                    main_game.snake.direction = Vector2(0, 1)
-            elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                if main_game.snake.direction.x != 1:
-                    main_game.snake.direction = Vector2(-1, 0)
 
-    
+        if game_state == playing:
+            if event.type == SCREEN_UPDATE:
+                main_game.update()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP or event.key == pygame.K_w:
+                    if main_game.snake.direction.y != 1:
+                        main_game.snake.direction = Vector2(0, -1)
+                elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                    if main_game.snake.direction.x != -1:
+                        main_game.snake.direction = Vector2(1, 0)
+                elif event.key == pygame.K_DOWN  or event.key == pygame.K_s:
+                    if main_game.snake.direction.y != -1:
+                        main_game.snake.direction = Vector2(0, 1)
+                elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                    if main_game.snake.direction.x != 1:
+                        main_game.snake.direction = Vector2(-1, 0)
+
+    if game_state == playing:
+        main_game.draw_elements()
+    elif game_state == main_menu:
+        main_menu_screen()
+    elif game_state == game_end:
+        end_game_screen()
+        
     #screen.fill((175, 215, 70))  # Optional: Clear the screen with a color before drawing
-    main_game.draw_elements()
     pygame.display.update()
     clock.tick(60)
