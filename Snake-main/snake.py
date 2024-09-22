@@ -8,7 +8,7 @@ cell_size = 40
 cell_number = 20
 cwd = os.getcwd()
 class scores:
-    ApiKey  = 'EGjpcL3ZfSkxt9dL8y2sQkJCreUD69vmX9a6bpaa3M4' #Please remove before pushing to git
+    ApiKey  = 'EGjpcL3ZfSkxt9dL8y2sQkJCreUD69vmX9a6bpaa3M4'
     highscore = 0
 
 ##### Mik's Code #####
@@ -35,7 +35,7 @@ settings_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width //
 leaderscore_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 480), (button_width, button_height))
 quit_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 540), (button_width, button_height))
 
-# Function to draw the leaderboard Border
+# Function to draw the leaderboard table
 def draw_leaderboard():
     high_scores = fetch_high_scores()  # Get high scores from SQLite Cloud
 
@@ -47,18 +47,27 @@ def draw_leaderboard():
     # Define table dimensions
     table_width = cell_size * cell_number / 1.5
     row_height = 40
-    table_x = cell_size * cell_number // 4
-    table_y = 80
+    table_x = (cell_size * cell_number - table_width) // 2  # Center the table
+    table_y = 100  # Moved down by 20 pixels
     cell_width = table_width / 2  # Two columns: Username and Score
+    rank_width = 80  # Increased width for the rank column
 
     # Draw the border for the table
     pygame.draw.rect(screen, (0, 0, 0), (table_x, table_y, table_width, row_height + len(high_scores) * 30), 2)
 
     # Draw the table header
+    rank_header_surface = game_font.render("Rank", True, (0, 0, 0))
     username_header_surface = game_font.render("Username", True, (0, 0, 0))
     score_header_surface = game_font.render("Score", True, (0, 0, 0))
-    screen.blit(username_header_surface, (table_x + 10, table_y + 10))
-    screen.blit(score_header_surface, (table_x + cell_width + 10, table_y + 10))
+    screen.blit(rank_header_surface, (table_x + 10, table_y + 10))
+    screen.blit(username_header_surface, (table_x + rank_width + 10, table_y + 10))  # Adjusted position
+    screen.blit(score_header_surface, (table_x + rank_width + cell_width + 10, table_y + 10))
+
+    # Draw the vertical lines separating columns
+    pygame.draw.line(screen, (0, 0, 0), (table_x + rank_width, table_y), 
+                     (table_x + rank_width, table_y + row_height + len(high_scores) * 30), 2)
+    pygame.draw.line(screen, (0, 0, 0), (table_x + rank_width + cell_width, table_y), 
+                     (table_x + rank_width + cell_width, table_y + row_height + len(high_scores) * 30), 2)
 
     # Draw rows and their borders
     for index, (username, score) in enumerate(high_scores):
@@ -67,15 +76,21 @@ def draw_leaderboard():
         pygame.draw.rect(screen, (0, 0, 0), (table_x, row_y, table_width, 30), 1)
 
         # Fit text in cells
+        rank_surface = game_font.render(str(index + 1), True, (0, 0, 0))  # Rank number
         username_surface = game_font.render(username, True, (0, 0, 0))
         score_surface = game_font.render(str(score), True, (0, 0, 0))
-        screen.blit(username_surface, (table_x + 10, row_y + 5))  # Adjust vertical alignment
-        screen.blit(score_surface, (table_x + cell_width + 10, row_y + 5))  # Adjust vertical alignment
+        
+        # Center rank numbers
+        rank_x = table_x + (rank_width - rank_surface.get_width()) // 2
+        screen.blit(rank_surface, (rank_x, row_y + 5))  # Centered rank number
+        screen.blit(username_surface, (table_x + rank_width + 10, row_y + 5))  # Adjust vertical alignment
+        screen.blit(score_surface, (table_x + rank_width + cell_width + 10, row_y + 5))  # Adjust vertical alignment
 
     # Draw bottom border
     pygame.draw.rect(screen, (0, 0, 0), (table_x, table_y + row_height + len(high_scores) * 30 - 2, table_width, 2))  # Bottom border
 
-# Function to display the leaderboard
+
+# Function to display the leaderboard and scores
 def display_leaderboard():
     global game_state
     leaderboard_active = True
@@ -109,6 +124,7 @@ def fetch_high_scores():
     conn.close()
     return high_scores
 
+# Uploads Username and Score to sqlitecloud
 def upload_score(username):
     # Assuming you have a variable that holds the current score
     current_score = len(main_game.snake.body) - 3
@@ -132,7 +148,6 @@ def upload_score(username):
     conn.close()
 
     print("Score uploaded successfully.")
-
 
 #Main menu screen
 def main_menu_screen():
@@ -195,52 +210,6 @@ def draw_button(rect, text, is_hovered):
     screen.blit(text_surf, (rect.x + (rect.width - text_surf.get_width()) // 2, rect.y + (rect.height - text_surf.get_height()) // 2))
 
 #End Game Screen
-def end_game_screen():
-    global game_state
-    username_input = ""
-    submit_enabled = True
-
-    # Tinted death screen
-    tint_surface = pygame.Surface((cell_number * cell_size, cell_number * cell_size), pygame.SRCALPHA)
-    tint_surface.fill((190, 0, 0, 100))
-
-    # Retry & Quit buttons
-    button_width = 200
-    button_height = 50
-    restart_button_rect = pygame.Rect((cell_number * cell_size // 2 - button_width // 2, 400), (button_width, button_height))
-    quit_button_rect = pygame.Rect((cell_number * cell_size // 2 - button_width // 2, 460), (button_width, button_height))
-
-    # Move the input box and submit button lower
-    input_box_y_position = 520  # Position for the input box
-    input_box = pygame.Rect((cell_number * cell_size // 2 - button_width // 2, input_box_y_position), (button_width, button_height))
-    submit_button_rect = pygame.Rect((cell_number * cell_size // 2 - button_width // 2, input_box_y_position + button_height + 10), (button_width, button_height))
-
-    end_screen = True
-
-def end_game_screen():
-    global game_state
-    username_input = ""
-    submit_enabled = True
-
-    # Tinted death screen
-    tint_surface = pygame.Surface((cell_number * cell_size, cell_number * cell_size), pygame.SRCALPHA)
-    tint_surface.fill((190, 0, 0, 100))
-
-    # Button dimensions
-    button_width = 200
-    button_height = 50
-
-    # Position for buttons and game over text
-    game_over_y_position = 150
-    restart_button_rect = pygame.Rect((cell_number * cell_size // 2 - button_width // 2, game_over_y_position + 100), (button_width, button_height))
-    quit_button_rect = pygame.Rect((cell_number * cell_size // 2 - button_width // 2, game_over_y_position + 160), (button_width, button_height))
-
-    # Move the input box and submit button lower
-    input_box_y_position = game_over_y_position + 230  # Position for the input box
-    input_box = pygame.Rect((cell_number * cell_size // 2 - button_width // 2, input_box_y_position), (button_width, button_height))
-    submit_button_rect = pygame.Rect((cell_number * cell_size // 2 - button_width // 2, input_box_y_position + button_height + 10), (button_width, button_height))
-
-    end_screen = True
 
 def end_game_screen():
     global game_state
@@ -307,25 +276,21 @@ def end_game_screen():
                     pygame.quit()
                     sys.exit()
                 elif submit_enabled and submit_button_rect.collidepoint(mouse_pos):
-                    if username_input:  # Check if the username is not empty
-                        upload_score(username_input)  # Call the upload_score function
-                        submit_enabled = False  # Disable the submit button after uploading
+                    if username_input:  
+                        upload_score(username_input)  
+                        submit_enabled = False  
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_BACKSPACE:
                     username_input = username_input[:-1]
                 elif event.key == pygame.K_RETURN:
-                    if submit_enabled and username_input:  # Check if the username is not empty
+                    if submit_enabled and username_input:  
                         upload_score(username_input)
                         submit_enabled = False
                 else:
                     username_input += event.unicode
 
         pygame.display.flip()
-
-
-
-
 
 
 
