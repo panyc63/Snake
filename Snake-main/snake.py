@@ -14,6 +14,7 @@ class scores:
 main_menu = 0
 playing = 1
 game_end = 2
+paused = 3
 
 game_state = main_menu
 
@@ -207,6 +208,68 @@ def draw_button(rect, text, is_hovered):
     text_surf = game_font.render(text, True, font_colour)
     screen.blit(text_surf, (rect.x + (rect.width - text_surf.get_width()) // 2, rect.y + (rect.height - text_surf.get_height()) // 2))
 
+#Pause Menu
+def pause_menu_screen():
+    global game_state
+    pause_menu_active = True
+
+    # Tinted screen when paused
+    tint_surface = pygame.Surface((cell_number * cell_size, cell_number * cell_size), pygame.SRCALPHA)
+    tint_surface.fill((0, 0, 0, 150))  
+
+    # Button dimensions and positions (similar to the end game screen)
+    button_width = 200
+    button_height = 50
+    resume_button_rect = pygame.Rect((cell_number * cell_size // 2 - button_width // 2, 300), (button_width, button_height))
+    restart_button_rect = pygame.Rect((cell_number * cell_size // 2 - button_width // 2, 360), (button_width, button_height))
+    menu_button_rect = pygame.Rect((cell_number * cell_size // 2 - button_width // 2, 420), (button_width, button_height))
+
+    while pause_menu_active:
+        # Keep the game elements drawn in the background
+        main_game.draw_elements()
+
+        # Apply the tinted overlay to give a "paused" effect
+        screen.blit(tint_surface, (0, 0))
+
+        # Render the "PAUSED" text
+        paused_text_surface = game_font.render("PAUSED", True, (255, 255, 255))
+        screen.blit(paused_text_surface, (cell_number * cell_size // 2 - paused_text_surface.get_width() // 2, 160))
+
+        # Draw the buttons
+        mouse_pos = pygame.mouse.get_pos()
+        resume_hovered = resume_button_rect.collidepoint(mouse_pos)
+        restart_hovered = restart_button_rect.collidepoint(mouse_pos)
+        menu_hovered = menu_button_rect.collidepoint(mouse_pos)
+
+        draw_button(resume_button_rect, "Resume", resume_hovered)
+        draw_button(restart_button_rect, "Retry", restart_hovered)
+        draw_button(menu_button_rect, "Main Menu", menu_hovered)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if resume_button_rect.collidepoint(mouse_pos):
+                    game_state = playing  # Resume game
+                    pause_menu_active = False
+                elif restart_button_rect.collidepoint(mouse_pos):
+                    main_game.snake.reset()
+                    main_game.bullets = []  # Reset bullets
+                    game_state = playing
+                    pause_menu_active = False
+                elif menu_button_rect.collidepoint(mouse_pos):
+                    game_state = main_menu  # Return to main menu
+                    pause_menu_active = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_p:  # If "P" is pressed again, resume the game
+                    game_state = playing
+                    pause_menu_active = False
+
+        pygame.display.flip()
+        
 #End Game Screen
 
 def end_game_screen():
@@ -444,6 +507,7 @@ class MAIN:
         self.fruit = FRUIT()
         self.wall = WALL()
         self.bullets = []
+        self.health = 5  # Player starts with 5 health points
         #get time of inititation which is 0 when starting
         self.last_bullet=pygame.time.get_ticks()
 
@@ -487,7 +551,10 @@ class MAIN:
                 
 
                 if bullet_rect.colliderect(snake_head_rect):
-                    self.game_over()
+                    self.health -= 1  # Reduce health by 1
+                    self.bullets.remove(bullet)  # Remove the bullet
+                    if self.health <= 0:
+                        self.game_over()  # Trigger game over if health reaches 0
 
                 
                 for w in wallRect:
@@ -525,6 +592,25 @@ class MAIN:
         bullet = BULLET(position, direction)
         self.bullets.append(bullet)
 
+    # Draw Health Bar
+    def draw_health_bar(self):
+        
+        bar_width = 100  
+        bar_height = 20   
+        health_x = cell_number * cell_size - bar_width - 670  
+        health_y = 10  
+
+        # Calculate health ratio (how much of the bar should be filled)
+        health_ratio = self.health / 5  
+
+        
+        pygame.draw.rect(screen, (255, 0, 0), (health_x, health_y, bar_width, bar_height))  # Full red bar
+        
+        pygame.draw.rect(screen, (0, 255, 0), (health_x, health_y, bar_width * health_ratio, bar_height))  # Green health bar
+
+        # Draw a border around the health bar
+        pygame.draw.rect(screen, (0, 0, 0), (health_x, health_y, bar_width, bar_height), 2)
+
 
     def draw_elements(self):
         # Draw the background image
@@ -536,6 +622,7 @@ class MAIN:
         for bullet in self.bullets:
             bullet.draw_bullet()
         self.draw_score()
+        self.draw_health_bar()
 
     def check_eat(self):
         if self.fruit.pos == self.snake.body[0]:
@@ -559,6 +646,7 @@ class MAIN:
     def reset(self):
         self.snake.reset()
         self.bullets = []
+        self.health = 5
 
 
     def draw_score(self):
@@ -627,6 +715,8 @@ while True:
                 elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
                     if main_game.snake.direction.x != 1:
                         main_game.snake.direction = Vector2(-1, 0)
+                elif event.key == pygame.K_p:  # Check for pause key
+                    game_state = paused
 
     if game_state == playing:
         main_game.draw_elements()
@@ -634,6 +724,8 @@ while True:
         main_menu_screen()
     elif game_state == game_end:
         end_game_screen()
+    elif game_state == paused:
+            pause_menu_screen()
         
     #screen.fill((175, 215, 70))  # Optional: Clear the screen with a color before drawing
     pygame.display.update()
