@@ -260,6 +260,7 @@ def pause_menu_screen():
                     game_state = playing
                     pause_menu_active = False
                 elif menu_button_rect.collidepoint(mouse_pos):
+                    main_game.snake.reset()
                     game_state = main_menu  # Return to main menu
                     pause_menu_active = False
 
