@@ -11,8 +11,6 @@ class scores:
     ApiKey  = 'EGjpcL3ZfSkxt9dL8y2sQkJCreUD69vmX9a6bpaa3M4'
     highscore = 0
 
-##### Mik's Code #####
-
 main_menu = 0
 playing = 1
 game_end = 2
@@ -223,7 +221,8 @@ def end_game_screen():
     # Retry & Quit buttons
     button_width = 200
     button_height = 50
-    restart_button_rect = pygame.Rect((cell_number * cell_size // 2 - button_width // 2, 400), (button_width, button_height))
+    restart_button_rect = pygame.Rect((cell_number * cell_size // 2 - button_width // 2, 340), (button_width, button_height))
+    menu_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 400), (button_width, button_height))
     quit_button_rect = pygame.Rect((cell_number * cell_size // 2 - button_width // 2, 460), (button_width, button_height))
 
     # Move the input box and submit button lower
@@ -234,9 +233,10 @@ def end_game_screen():
     end_screen = True
 
     while end_screen:
+        
         screen.blit(background_image, (0, 0))
         screen.blit(tint_surface, (0, 0))
-        screen.blit(game_over_image, (cell_number * cell_size // 2 - game_over_image.get_width() // 2, 200))
+        screen.blit(game_over_image, (cell_number * cell_size // 2 - game_over_image.get_width() // 2, 160))
 
         # Draw the "Submit High Score?" text
         submit_text_surface = game_font.render("Submit High Score?", True, (255, 255, 255))
@@ -252,11 +252,13 @@ def end_game_screen():
 
         # Check if mouse is over buttons
         restart_hovered = restart_button_rect.collidepoint(mouse_pos)
+        menu_hovered = menu_button_rect.collidepoint(mouse_pos)
         quit_hovered = quit_button_rect.collidepoint(mouse_pos)
         submit_hovered = submit_button_rect.collidepoint(mouse_pos)
 
         # Hover effects
         draw_button(restart_button_rect, "Retry", restart_hovered)
+        draw_button(menu_button_rect,"Back to Menu", menu_hovered)
         draw_button(quit_button_rect, "Quit", quit_hovered)
 
         if submit_enabled:
@@ -271,6 +273,10 @@ def end_game_screen():
                 if restart_button_rect.collidepoint(mouse_pos):
                     main_game.snake.reset()
                     game_state = playing
+                    end_screen = False
+                elif menu_button_rect.collidepoint(mouse_pos):
+                    game_state = main_menu
+                    main_game.snake.reset()
                     end_screen = False
                 elif quit_button_rect.collidepoint(mouse_pos):
                     pygame.quit()
@@ -291,10 +297,6 @@ def end_game_screen():
                     username_input += event.unicode
 
         pygame.display.flip()
-
-
-
-##### Mik's Code #####
 
 class SNAKE:
     def __init__(self):
