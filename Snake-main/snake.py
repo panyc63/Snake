@@ -1,7 +1,9 @@
 import pygame, sys, random ,os
 from pygame.math import Vector2
 import sqlitecloud
-
+import json
+import tkinter as tk
+from tkinter import filedialog
 
 # Constants
 cell_size = 40
@@ -31,8 +33,49 @@ button_width = 300
 button_height = 50
 start_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 360), (button_width, button_height))
 settings_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 420), (button_width, button_height))
-leaderscore_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 480), (button_width, button_height))
-quit_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 540), (button_width, button_height))
+mapSetting_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 480), (button_width, button_height))
+leaderscore_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 540), (button_width, button_height))
+quit_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 600), (button_width, button_height))
+
+def mapSetting():
+    global game_state
+    mapEdit = True
+    mapE = mapEditting()
+
+    while mapEdit:
+        screen.blit(background_image, (0, 0))  # Set the background
+        mouse_pos = pygame.mouse.get_pos()
+        loadMap_button_rect = pygame.Rect((cell_size * cell_number // 2 - button_width // 2, 420), (button_width, button_height))
+        createMap_button_rect = pygame.Rect((cell_size * cell_number // 2 - button_width // 2, 480), (button_width, button_height))
+        backMap_button_rect = pygame.Rect((cell_size * cell_number // 2 - button_width // 2, 540), (button_width, button_height))
+
+        loadMap_hovered = loadMap_button_rect.collidepoint(mouse_pos)
+        createMap_hovered = createMap_button_rect.collidepoint(mouse_pos)
+        backButtonMap_hovered = backMap_button_rect.collidepoint(mouse_pos)
+
+        draw_button(loadMap_button_rect, "Load Map", loadMap_hovered) 
+        draw_button(createMap_button_rect, "Create Map", createMap_hovered) 
+        draw_button(backMap_button_rect, "Back", backButtonMap_hovered) 
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if backMap_button_rect.collidepoint(mouse_pos):
+                    mapEdit = False  # Exit map settings
+                    game_state = main_menu  # Go back to the main menu
+                elif loadMap_button_rect.collidepoint(mouse_pos):
+                    # Implement load map functionality here
+                    print("Load Map clicked")
+                    mapE.loadMap()
+                elif createMap_button_rect.collidepoint(mouse_pos):
+                    # Implement create map functionality here
+                    print("Create Map clicked")
+                    mapE.createMap()
+
+        pygame.display.flip()      
 
 # Function to draw the leaderboard table
 def draw_leaderboard():
@@ -165,12 +208,14 @@ def main_menu_screen():
         # Check if mouse is over any button
         start_hovered = start_button_rect.collidepoint(mouse_pos)
         settings_hovered = settings_button_rect.collidepoint(mouse_pos)
+        mapSettings_hovered = mapSetting_button_rect.collidepoint(mouse_pos)
         leaderscore_hovered = leaderscore_button_rect.collidepoint(mouse_pos)
         quit_hovered = quit_button_rect.collidepoint(mouse_pos)
 
         # Hover effects
         draw_button(start_button_rect, "Start", start_hovered)
         draw_button(settings_button_rect, "Gameplay Settings", settings_hovered)
+        draw_button(mapSetting_button_rect, "Map Settings", mapSettings_hovered)
         draw_button(leaderscore_button_rect, "Highscore", leaderscore_hovered)
         draw_button(quit_button_rect, "Quit", quit_hovered)
 
@@ -188,6 +233,11 @@ def main_menu_screen():
                 #If Settings Button was pressed
                 elif settings_button_rect.collidepoint(mouse_pos):
                     print("Gameplay Settings button clicked")
+                    #If Settings Button was pressed
+                elif mapSetting_button_rect.collidepoint(mouse_pos):
+                    print("Map Settings button clicked")
+                    #game_menu = False
+                    mapSetting()
                 #If Leaderscore Button was pressed
                 elif leaderscore_button_rect.collidepoint(mouse_pos):
                     display_leaderboard()
@@ -484,7 +534,6 @@ class WALL:
             else:
                 screen.blit(middle_wall, wall_rect)
 
-
 class BULLET:
     def __init__(self, position, direction):
         self.position = position
@@ -501,6 +550,69 @@ class BULLET:
         # Draw the bullet as a small circle
         pixel_position = (int(self.position.x * cell_size), int(self.position.y * cell_size))
         pygame.draw.circle(screen, self.color, pixel_position, self.radius)
+
+class mapEditting:
+    def __init__(self):
+        root = tk.Tk()
+        root.withdraw()
+        self.WIDTH = cell_size*cell_number
+        self.HEIGHT = cell_size*cell_number
+        self.TILE_SIZE = 40
+        self.GRID_WIDTH = self.WIDTH // self.TILE_SIZE
+        self.GRID_HEIGHT = self.HEIGHT // self.TILE_SIZE
+        self.WHITE = (255, 255, 255)
+        self.BLACK = (0, 0, 0)
+        self.RED = (255, 0, 0)
+        self.grid = [[0 for _ in range(self.GRID_WIDTH)] for _ in range(self.GRID_HEIGHT)]
+
+
+    def createMap(self):
+        running = True
+        while running:
+            screen.fill(self.BLACK)
+            screen.blit(self.background_image, (0, 0))  # Draw the background image
+
+            self.drawGrid()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:  # Left click to place a tile
+                        x, y = event.pos
+                        self.grid[y // self.TILE_SIZE][x // self.TILE_SIZE] = 1  # Place a tile
+                    elif event.button == 3:  # Right click to remove a tile
+                        x, y = event.pos
+                        self.grid[y // self.TILE_SIZE][x // self.TILE_SIZE] = 0  # Remove a tile
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_s:  # Save map
+                        self.save_map(cwd+ "/Snake-main/map.json")
+                    elif event.key == pygame.K_l:  # Load map
+                        self.loadMap()
+                    elif event.key == pygame.K_b:
+                        running = False
+
+            pygame.display.flip()
+
+    def loadMap(self):
+        file_path = filedialog.askopenfilename(title="Select a Map File", filetypes=[("JSON files", "*.json")])
+        if file_path:  # Check if a file was selected
+            with open(file_path, 'r') as file:
+                self.grid = json.load(file)
+    
+    def save_map(self,filename):
+        with open(filename, 'w') as f:
+            json.dump(self.grid, f)
+
+    def drawGrid(self):
+        for y in range(self.GRID_HEIGHT):
+            for x in range(self.GRID_WIDTH):
+                rect = pygame.Rect(x * self.TILE_SIZE, y * self.TILE_SIZE, self.TILE_SIZE, self.TILE_SIZE)
+                # Only draw the outline, no fill
+                if self.grid[y][x] == 1:  # Filled
+                    pygame.draw.rect(screen, self.RED, rect)
+                pygame.draw.rect(screen, self.BLACK, rect, 1)  # Draw the outline of the square
+              
 
 class MAIN:
     def __init__(self):
