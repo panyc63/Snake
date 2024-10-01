@@ -506,6 +506,7 @@ class SNAKE:
 
 class FRUIT:
     def __init__(self):
+        self.pos = Vector2(0,0)
         self.randomize()
 
     def draw_fruit(self):
@@ -519,8 +520,13 @@ class FRUIT:
 
 class WALL:
     def __init__(self):
-        self.body = [Vector2(5,6), Vector2(4,6), Vector2(3,6)]
-        self.middle_wall = pygame.image.load(cwd+'/Snake-main/Graphics/middle_wall.png').convert_alpha()
+        self.body = []
+
+    def dynamicWall(self,grid):
+        for yCount,i in enumerate(grid):
+            for xCount,x in enumerate(i):
+                if x == 1:
+                    self.body.append(Vector2(xCount,yCount))
 
     def create_Wall(self):
          for index, block in enumerate(self.body):
@@ -528,12 +534,24 @@ class WALL:
             y_pos = int(block.y * cell_size)
             wall_rect = pygame.Rect(x_pos, y_pos, cell_size, cell_size)
             if index == 0:
-                screen.blit(right_wall, wall_rect)
-            elif index == len(self.body) -1 :
                 screen.blit(left_wall, wall_rect)
+            elif index == len(self.body) -1 :
+                screen.blit(right_wall, wall_rect)
             else:
                 screen.blit(middle_wall, wall_rect)
 
+    #Check if apple is same position as wall
+    def checkCollision(self,pos):
+        for block in self.body:
+            if block == pos:
+                return True
+            
+    def checkSnakeCollision(self,snake_head):
+        for w in self.body:
+            wallRect =(pygame.Rect(int(w[0] * cell_size) ,int(w[1] * cell_size),cell_size, cell_size))
+            if snake_head.colliderect(wallRect):
+                return True
+            
 class BULLET:
     def __init__(self, position, direction):
         self.position = position
@@ -570,7 +588,7 @@ class mapEditting:
         running = True
         while running:
             screen.fill(self.BLACK)
-            screen.blit(self.background_image, (0, 0))  # Draw the background image
+            screen.blit(background_image, (0, 0))  # Draw the background image
 
             self.drawGrid()
 
@@ -619,6 +637,7 @@ class MAIN:
         self.snake = SNAKE()
         self.fruit = FRUIT()
         self.wall = WALL()
+        self.wall.dynamicWall(grid)
         self.bullets = []
         self.health = 5  # Player starts with 5 health points
         #get time of inititation which is 0 when starting
@@ -628,6 +647,7 @@ class MAIN:
         self.snake.move_snake()
         self.update_bullets()
         self.check_eat()
+        self.checkWallCollisions()        
         self.check_fail()
         self.spawn_startbullet()
 
@@ -643,11 +663,8 @@ class MAIN:
         
     def update_bullets(self):
         wallRect = []
-        hitWall = False  
-        for i in self.wall.body:
-            wallRect.append([(pygame.Rect(int(i.x * cell_size) ,int(i.y * cell_size),cell_size, cell_size))])
-        
-
+        for w in self.wall.body:
+            wallRect.append(pygame.Rect(int(w[0] * cell_size) ,int(w[1] * cell_size),cell_size, cell_size))
         for bullet in self.bullets[:]:
             bullet.move()
             # Remove bullet once out of map
@@ -668,18 +685,26 @@ class MAIN:
                     self.bullets.remove(bullet)  # Remove the bullet
                     if self.health <= 0:
                         self.game_over()  # Trigger game over if health reaches 0
-
                 
                 for w in wallRect:
-                    if bullet_rect.colliderect(w[0]):
-                        hitWall = True
-                    elif snake_head_rect.colliderect(w[0]):
-                        self.game_over()
+                    if bullet_rect.colliderect(w):
+                        self.bullets.remove(bullet)
+                        break
 
-                if hitWall:   
-                    self.bullets.remove(bullet)
-                    hitWall = False
-               
+
+
+                        
+    def checkWallCollisions(self):
+        snake_head_rect = pygame.Rect(int(self.snake.body[0].x * cell_size),
+                                              int(self.snake.body[0].y * cell_size),
+                                              cell_size, cell_size)
+        
+        if self.wall.checkSnakeCollision(snake_head_rect):
+            self.game_over()
+
+        if self.wall.checkCollision(self.fruit.pos):
+            self.fruit.randomize()
+                
 
     def spawn_bullet(self):
         # Randomly decide which side to spawn from (0: top, 1: bottom, 2: left, 3: right)
@@ -724,7 +749,7 @@ class MAIN:
         # Draw a border around the health bar
         pygame.draw.rect(screen, (0, 0, 0), (health_x, health_y, bar_width, bar_height), 2)
 
-
+    #Initialize spawns of game
     def draw_elements(self):
         # Draw the background image
         screen.blit(background_image, (0, 0))
@@ -737,11 +762,14 @@ class MAIN:
         self.draw_score()
         self.draw_health_bar()
 
+    #Check snake eat apple
     def check_eat(self):
         if self.fruit.pos == self.snake.body[0]:
             self.fruit.randomize()
             self.snake.add_block()
             self.snake.play_crunch_sound()
+
+            
 #game over if hit its own body
     def check_fail(self):
         if not 0 <= self.snake.body[0].x < cell_number or not 0 <= self.snake.body[0].y < cell_number:
@@ -792,6 +820,11 @@ left_wall = pygame.image.load(cwd+'/Snake-main/Graphics/left_wall.png').convert_
 right_wall = pygame.image.load(cwd+'/Snake-main/Graphics/right_wall.png').convert_alpha()
 game_font = pygame.font.Font(cwd+'/Snake-main/Font/PoetsenOne-Regular.ttf', 25)
 
+with open(cwd+"/Snake-main/map3.json", 'r') as f:
+        grid = json.load(f)
+
+
+
 # Background image
 background_image = pygame.image.load(cwd+'/Snake-main/Graphics/background.jpg').convert()
 game_menu_image = pygame.image.load(cwd+'/Snake-main/Graphics/screen_menu_image.jpg').convert()
@@ -838,7 +871,7 @@ while True:
     elif game_state == game_end:
         end_game_screen()
     elif game_state == paused:
-            pause_menu_screen()
+        pause_menu_screen()
         
     #screen.fill((175, 215, 70))  # Optional: Clear the screen with a color before drawing
     pygame.display.update()
