@@ -872,6 +872,7 @@ while True:
     elif game_state == main_menu:
         main_menu_screen()
     elif game_state == game_end:
+        main_game.reset()
         end_game_screen()
     elif game_state == paused:
         pause_menu_screen()
