@@ -386,6 +386,8 @@ def end_game_screen():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if restart_button_rect.collidepoint(mouse_pos):
                     main_game.snake.reset()
+                    main_game.bullets = []
+                    main_game.health = 5
                     game_state = playing
                     end_screen = False
                 elif menu_button_rect.collidepoint(mouse_pos):
@@ -484,15 +486,16 @@ class SNAKE:
         elif tail_relation == Vector2(0,-1): self.tail = self.tail_down
 
     def move_snake(self):
-        if self.new_block:
-            body_copy = self.body[:]
-            body_copy.insert(0, body_copy[0] + self.direction)
-            self.body = body_copy[:]
-            self.new_block = False
-        else:
-            body_copy = self.body[:-1]
-            body_copy.insert(0, body_copy[0] + self.direction)
-            self.body = body_copy[:]
+        if self.direction != Vector2(0, 0):
+            if self.new_block:
+                body_copy = self.body[:]
+                body_copy.insert(0, body_copy[0] + self.direction)
+                self.body = body_copy[:]
+                self.new_block = False
+            else:
+                body_copy = self.body[:-1]
+                body_copy.insert(0, body_copy[0] + self.direction)
+                self.body = body_copy[:]
 
     def add_block(self):
         self.new_block = True
@@ -777,7 +780,7 @@ class MAIN:
 
         for block in self.snake.body[1:]:
             if block == self.snake.body[0]:
-                self.reset()
+                self.game_over()
 
 #game over MK 
     def game_over(self):
