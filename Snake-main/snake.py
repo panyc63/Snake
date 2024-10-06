@@ -169,7 +169,7 @@ def fetch_high_scores():
 # Uploads Username and Score to sqlitecloud
 def upload_score(username):
     # Assuming you have a variable that holds the current score
-    current_score = len(main_game.snake.body) - 3
+    current_score = scores.highscore
 
     # Create a connection to SQLite Cloud
     conn = sqlitecloud.connect(f"sqlitecloud://cjmouemghk.sqlite.cloud:8860?apikey={scores.ApiKey}")
@@ -771,6 +771,7 @@ class MAIN:
             self.fruit.randomize()
             self.snake.add_block()
             self.snake.play_crunch_sound()
+            scores.highscore+=1
 
             
 #game over if hit its own body
