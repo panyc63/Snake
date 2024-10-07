@@ -17,7 +17,8 @@ main_menu = 0
 playing = 1
 game_end = 2
 paused = 3
-
+grid = []
+customGrid =[]
 game_state = main_menu
 
 button_colour = (100, 100, 255)
@@ -37,8 +38,95 @@ mapSetting_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width 
 leaderscore_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 540), (button_width, button_height))
 quit_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 600), (button_width, button_height))
 
+
+def gameDifficulty():
+
+    #Game Difficulty screen
+    global game_state,grid,customGrid
+    gameDifficulty = True
+    mapE = mapEditting()
+
+
+    while gameDifficulty:
+        screen.blit(game_menu_image, (0, 0))  # Set the background
+        mouse_pos = pygame.mouse.get_pos()
+        map1_button_rect = pygame.Rect((100, 400), (button_width/2, button_height))
+        map2_button_rect = pygame.Rect((300, 400), (button_width/2, button_height))
+
+        map3_button_rect = pygame.Rect((500, 400), (button_width/2, button_height))
+
+        map4_button_rect = pygame.Rect((50, 480), (button_width/2, button_height))
+        map5_button_rect = pygame.Rect((250, 480), (button_width/2, button_height))
+
+        customMap_button_rect = pygame.Rect((450, 480), (button_width, button_height))
+        backMap_button_rect = pygame.Rect((cell_size * cell_number // 2 - button_width // 2, 600), (button_width, button_height))
+
+
+
+        map1_hovered = map1_button_rect.collidepoint(mouse_pos)
+        map2_hovered = map2_button_rect.collidepoint(mouse_pos)
+        map3_hovered = map3_button_rect.collidepoint(mouse_pos)
+        map4_hovered = map4_button_rect.collidepoint(mouse_pos)
+        map5_hovered = map5_button_rect.collidepoint(mouse_pos)
+        customMap_hovered = customMap_button_rect.collidepoint(mouse_pos)
+        backButtonMap_hovered = backMap_button_rect.collidepoint(mouse_pos)
+
+
+        draw_button(map1_button_rect, "Map 1", map1_hovered)
+        draw_button(map2_button_rect, "Map 2", map2_hovered) 
+        draw_button(map3_button_rect, "Map 3", map3_hovered) 
+        draw_button(map4_button_rect, "Map 4", map4_hovered) 
+        draw_button(map5_button_rect, "Map 5", map5_hovered) 
+        draw_button(customMap_button_rect, "Custom Map", customMap_hovered) 
+        draw_button(backMap_button_rect, "Back", backButtonMap_hovered) 
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if backMap_button_rect.collidepoint(mouse_pos):
+                    gameDifficulty = False  # Exit map settings
+                    game_state = main_menu  # Go back to the main menu
+                elif map1_button_rect.collidepoint(mouse_pos):
+                    grid = mapE.loadSpecificMap("map1.json")
+                    game_state = playing
+                    gameDifficulty = False
+                elif map2_button_rect.collidepoint(mouse_pos):
+                    grid = mapE.loadSpecificMap("map2.json")
+                    game_state = playing
+                    gameDifficulty = False
+
+                elif map3_button_rect.collidepoint(mouse_pos):
+                    grid = mapE.loadSpecificMap("map3.json")
+                    game_state = playing
+                    gameDifficulty = False
+                elif map4_button_rect.collidepoint(mouse_pos):
+                    grid = mapE.loadSpecificMap("map4.json")
+                    game_state = playing
+                    gameDifficulty = False
+                elif map5_button_rect.collidepoint(mouse_pos):
+                    grid = mapE.loadSpecificMap("map5.json")
+                    game_state = playing
+                    gameDifficulty = False
+
+                elif customMap_button_rect.collidepoint(mouse_pos):
+                    if not customGrid:
+                        grid = mapE.loadMap()
+                        customGrid = grid
+                        game_state = playing
+                        gameDifficulty = False
+                    elif not customGrid == []:
+                        grid = customGrid                            
+                        game_state = playing
+                        gameDifficulty = False
+        pygame.display.flip()      
+
 def mapSetting():
-    global game_state
+
+    #Map Setting screen
+    global game_state,customGrid
     mapEdit = True
     mapE = mapEditting()
 
@@ -52,7 +140,7 @@ def mapSetting():
         loadMap_hovered = loadMap_button_rect.collidepoint(mouse_pos)
         createMap_hovered = createMap_button_rect.collidepoint(mouse_pos)
         backButtonMap_hovered = backMap_button_rect.collidepoint(mouse_pos)
-
+        screen.blit(map_Instruction,(200,60))
         draw_button(loadMap_button_rect, "Load Map", loadMap_hovered) 
         draw_button(createMap_button_rect, "Create Map", createMap_hovered) 
         draw_button(backMap_button_rect, "Back", backButtonMap_hovered) 
@@ -68,11 +156,11 @@ def mapSetting():
                     game_state = main_menu  # Go back to the main menu
                 elif loadMap_button_rect.collidepoint(mouse_pos):
                     # Implement load map functionality here
-                    print("Load Map clicked")
-                    mapE.loadMap()
+                    customGrid = mapE.loadMap()
+                    mapEdit = False  # Exit map settings
+                    game_state = main_menu  # Go back to the main menu
                 elif createMap_button_rect.collidepoint(mouse_pos):
                     # Implement create map functionality here
-                    print("Create Map clicked")
                     mapE.createMap()
 
         pygame.display.flip()      
@@ -194,12 +282,11 @@ def upload_score(username):
 #Main menu screen
 def main_menu_screen():
 
-    global game_state
+    global game_state,grid
 
     game_menu = True
 
     while game_menu:
-        
         screen.blit(game_menu_image, (0, 0))
 
         # Get mouse position
@@ -228,7 +315,7 @@ def main_menu_screen():
                 #If Start Button was pressed
                 if start_button_rect.collidepoint(mouse_pos):
                     print("Start button clicked")
-                    game_state = playing
+                    gameDifficulty()
                     game_menu = False
                 #If Settings Button was pressed
                 elif settings_button_rect.collidepoint(mouse_pos):
@@ -236,8 +323,8 @@ def main_menu_screen():
                     #If Settings Button was pressed
                 elif mapSetting_button_rect.collidepoint(mouse_pos):
                     print("Map Settings button clicked")
-                    #game_menu = False
                     mapSetting()
+                    game_menu = False
                 #If Leaderscore Button was pressed
                 elif leaderscore_button_rect.collidepoint(mouse_pos):
                     display_leaderboard()
@@ -536,12 +623,10 @@ class WALL:
             x_pos = int(block.x * cell_size)
             y_pos = int(block.y * cell_size)
             wall_rect = pygame.Rect(x_pos, y_pos, cell_size, cell_size)
-            if index == 0:
-                screen.blit(left_wall, wall_rect)
-            elif index == len(self.body) -1 :
-                screen.blit(right_wall, wall_rect)
-            else:
-                screen.blit(middle_wall, wall_rect)
+            screen.blit(middle_wall, wall_rect)
+    def deleteWall(self):
+        self.body = []
+        pass
 
     #Check if apple is same position as wall
     def checkCollision(self,pos):
@@ -588,7 +673,10 @@ class mapEditting:
 
 
     def createMap(self):
+        global customGrid
         running = True
+        dragging = False
+        draggingDelete = False
         while running:
             screen.fill(self.BLACK)
             screen.blit(background_image, (0, 0))  # Draw the background image
@@ -600,30 +688,59 @@ class mapEditting:
                     running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:  # Left click to place a tile
+                        dragging = True
                         x, y = event.pos
                         self.grid[y // self.TILE_SIZE][x // self.TILE_SIZE] = 1  # Place a tile
                     elif event.button == 3:  # Right click to remove a tile
+                        draggingDelete = True
                         x, y = event.pos
                         self.grid[y // self.TILE_SIZE][x // self.TILE_SIZE] = 0  # Remove a tile
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    dragging = False
+                    draggingDelete = False
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_s:  # Save map
-                        self.save_map(cwd+ "/Snake-main/map.json")
-                    elif event.key == pygame.K_l:  # Load map
-                        self.loadMap()
+                        customGrid = self.save_map()
+                        running = False
                     elif event.key == pygame.K_b:
                         running = False
 
-            pygame.display.flip()
+                if dragging:
+                    circle_pos = pygame.mouse.get_pos()
+                    x =circle_pos[1]             
+                    y = circle_pos[0]
+                    self.grid[x // self.TILE_SIZE][y// self.TILE_SIZE] = 1
+                if draggingDelete:
+                    circle_pos = pygame.mouse.get_pos()
+                    x =circle_pos[1]             
+                    y = circle_pos[0]
+                    self.grid[x // self.TILE_SIZE][y// self.TILE_SIZE] = 0
 
+            pygame.display.flip()
+    def loadSpecificMap(self,mapName):
+        with open(cwd+"/Snake-main/"+mapName, 'r') as f:
+            grid = json.load(f)
+        return grid
+
+    #Load Custom Map
     def loadMap(self):
+        customGrid = []
         file_path = filedialog.askopenfilename(title="Select a Map File", filetypes=[("JSON files", "*.json")])
         if file_path:  # Check if a file was selected
             with open(file_path, 'r') as file:
-                self.grid = json.load(file)
-    
-    def save_map(self,filename):
-        with open(filename, 'w') as f:
+                customGrid = json.load(file)
+
+
+        return customGrid
+    def save_map(self):
+        file_path = filedialog.asksaveasfilename(
+        title="Save File",
+        defaultextension=".json",  # Default file extension
+        filetypes=[("json", "*.json"), ("All files", "*.*")]  # File type options
+    )
+        with open(file_path, 'w') as f:
             json.dump(self.grid, f)
+        return self.grid
 
     def drawGrid(self):
         for y in range(self.GRID_HEIGHT):
@@ -640,11 +757,11 @@ class MAIN:
         self.snake = SNAKE()
         self.fruit = FRUIT()
         self.wall = WALL()
-        self.wall.dynamicWall(grid)
         self.bullets = []
         self.health = 5  # Player starts with 5 health points
         #get time of inititation which is 0 when starting
         self.last_bullet=pygame.time.get_ticks()
+
 
     def update(self):
         self.snake.move_snake()
@@ -758,8 +875,9 @@ class MAIN:
         screen.blit(background_image, (0, 0))
         self.fruit.draw_fruit()
         self.snake.draw_snake()
+        self.wall.deleteWall()
+        self.wall.dynamicWall(grid)
         self.wall.create_Wall()
-
         for bullet in self.bullets:
             bullet.draw_bullet()
         self.draw_score()
@@ -823,12 +941,7 @@ middle_wall =pygame.image.load(cwd+'/Snake-main/Graphics/middle_wall.png').conve
 left_wall = pygame.image.load(cwd+'/Snake-main/Graphics/left_wall.png').convert_alpha()
 right_wall = pygame.image.load(cwd+'/Snake-main/Graphics/right_wall.png').convert_alpha()
 game_font = pygame.font.Font(cwd+'/Snake-main/Font/PoetsenOne-Regular.ttf', 25)
-
-with open(cwd+"/Snake-main/map3.json", 'r') as f:
-        grid = json.load(f)
-
-
-
+map_Instruction = pygame.image.load(cwd+'/Snake-main/Graphics/mapInstruction.png').convert_alpha()
 # Background image
 background_image = pygame.image.load(cwd+'/Snake-main/Graphics/background.jpg').convert()
 game_menu_image = pygame.image.load(cwd+'/Snake-main/Graphics/screen_menu_image.jpg').convert()
@@ -837,7 +950,6 @@ game_over_image = pygame.image.load(cwd+'/Snake-main/Graphics/game_over_image.pn
 # Setup timers
 SCREEN_UPDATE = pygame.USEREVENT
 pygame.time.set_timer(SCREEN_UPDATE, 150)
-
 
 
 main_game = MAIN()
