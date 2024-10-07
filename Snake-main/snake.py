@@ -540,7 +540,7 @@ class SNAKE:
             #The direction the Snake is facing 
             if index == 0:
                 screen.blit(self.head, block_rect)
-            #tail position
+            #tail
             elif index == len(self.body) - 1:
                 screen.blit(self.tail, block_rect)
             else:
