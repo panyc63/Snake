@@ -537,8 +537,10 @@ class SNAKE:
             y_pos = int(block.y * cell_size)
             block_rect = pygame.Rect(x_pos, y_pos, cell_size, cell_size)
 
+            #The direction the Snake is facing 
             if index == 0:
                 screen.blit(self.head, block_rect)
+            #tail position
             elif index == len(self.body) - 1:
                 screen.blit(self.tail, block_rect)
             else:
