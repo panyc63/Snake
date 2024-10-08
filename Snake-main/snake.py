@@ -749,10 +749,13 @@ class mapEditting:
         title="Save File",
         defaultextension=".json",  # Default file extension
         filetypes=[("json", "*.json"), ("All files", "*.*")]  # File type options
-    )
-        with open(file_path, 'w') as f:
-            json.dump(self.grid, f)
-        return self.grid
+    )   
+        try:
+            with open(file_path, 'w') as f:
+                json.dump(self.grid, f)
+            return self.grid
+        except FileNotFoundError:
+            pass
 
     def drawGrid(self):
         for y in range(self.GRID_HEIGHT):
