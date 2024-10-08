@@ -42,7 +42,7 @@ quit_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 
 def gameDifficulty():
 
     #Game Difficulty screen
-    global game_state,grid,customGrid
+    global game_state,grid,customGrid,selected_map_name
     gameDifficulty = True
     mapE = mapEditting()
 
@@ -91,23 +91,28 @@ def gameDifficulty():
                     game_state = main_menu  # Go back to the main menu
                 elif map1_button_rect.collidepoint(mouse_pos):
                     grid = mapE.loadSpecificMap("map1.json")
+                    selected_map_name = "Map 1"
                     game_state = playing
                     gameDifficulty = False
                 elif map2_button_rect.collidepoint(mouse_pos):
                     grid = mapE.loadSpecificMap("map2.json")
+                    selected_map_name = "Map 2"
                     game_state = playing
                     gameDifficulty = False
 
                 elif map3_button_rect.collidepoint(mouse_pos):
                     grid = mapE.loadSpecificMap("map3.json")
+                    selected_map_name = "Map 3"
                     game_state = playing
                     gameDifficulty = False
                 elif map4_button_rect.collidepoint(mouse_pos):
                     grid = mapE.loadSpecificMap("map4.json")
+                    selected_map_name = "Map 4"
                     game_state = playing
                     gameDifficulty = False
                 elif map5_button_rect.collidepoint(mouse_pos):
                     grid = mapE.loadSpecificMap("map5.json")
+                    selected_map_name = "Map 5"
                     game_state = playing
                     gameDifficulty = False
 
@@ -350,11 +355,14 @@ def pause_menu_screen():
     global game_state
     pause_menu_active = True
 
+    if main_game.paused_time is None:  # Only set this the first time the game is paused
+        main_game.paused_time = pygame.time.get_ticks()
+
     # Tinted screen when paused
     tint_surface = pygame.Surface((cell_number * cell_size, cell_number * cell_size), pygame.SRCALPHA)
-    tint_surface.fill((0, 0, 0, 150))  
+    tint_surface.fill((0, 0, 0, 150))
 
-    # Button dimensions and positions (similar to the end game screen)
+    # Button dimensions and positions
     button_width = 200
     button_height = 50
     resume_button_rect = pygame.Rect((cell_number * cell_size // 2 - button_width // 2, 300), (button_width, button_height))
@@ -362,17 +370,13 @@ def pause_menu_screen():
     menu_button_rect = pygame.Rect((cell_number * cell_size // 2 - button_width // 2, 420), (button_width, button_height))
 
     while pause_menu_active:
-        # Keep the game elements drawn in the background
-        main_game.draw_elements()
+        main_game.draw_elements()  # Keep the game elements drawn in the background
+        screen.blit(tint_surface, (0, 0))  # Apply the tinted overlay for the pause effect
 
-        # Apply the tinted overlay to give a "paused" effect
-        screen.blit(tint_surface, (0, 0))
-
-        # Render the "PAUSED" text
         paused_text_surface = game_font.render("PAUSED", True, (255, 255, 255))
         screen.blit(paused_text_surface, (cell_number * cell_size // 2 - paused_text_surface.get_width() // 2, 160))
 
-        # Draw the buttons
+        # Draw buttons
         mouse_pos = pygame.mouse.get_pos()
         resume_hovered = resume_button_rect.collidepoint(mouse_pos)
         restart_hovered = restart_button_rect.collidepoint(mouse_pos)
@@ -389,20 +393,26 @@ def pause_menu_screen():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if resume_button_rect.collidepoint(mouse_pos):
+                    current_time = pygame.time.get_ticks()
+                    # Add the pause duration to the total paused time
+                    main_game.total_paused_duration += current_time - main_game.paused_time
+                    main_game.paused_time = None  # Reset paused time
                     game_state = playing  # Resume game
                     pause_menu_active = False
                 elif restart_button_rect.collidepoint(mouse_pos):
-                    main_game.snake.reset()
-                    main_game.bullets = []  # Reset bullets
+                    main_game.reset()
                     game_state = playing
                     pause_menu_active = False
                 elif menu_button_rect.collidepoint(mouse_pos):
-                    main_game.snake.reset()
+                    main_game.reset()
                     game_state = main_menu  # Return to main menu
                     pause_menu_active = False
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_p:  # If "P" is pressed again, resume the game
+                    current_time = pygame.time.get_ticks()
+                    main_game.total_paused_duration += current_time - main_game.paused_time
+                    main_game.paused_time = None  # Reset paused time
                     game_state = playing
                     pause_menu_active = False
 
@@ -763,6 +773,11 @@ class MAIN:
         self.health = 5  # Player starts with 5 health points
         #get time of inititation which is 0 when starting
         self.last_bullet=pygame.time.get_ticks()
+        self.start_time = None  
+        self.game_started = False # used to check if game has started(player moved)
+        self.last_fruit_time = None 
+        self.paused_time = None  # Track when the game was paused
+        self.total_paused_duration = 0  # Track the total time spent paused
 
 
     def update(self):
@@ -772,6 +787,27 @@ class MAIN:
         self.checkWallCollisions()        
         self.check_fail()
         self.spawn_startbullet()
+
+        if self.game_started:
+
+
+            if game_state == paused:
+                return
+
+            current_time = pygame.time.get_ticks() - self.total_paused_duration
+            
+            if self.paused_time is not None:
+                self.last_fruit_time = current_time
+
+            if self.last_fruit_time is None:
+                self.last_fruit_time = current_time  # start the fruit timer on first movement
+
+            # Check if 5 seconds have passed since last fruit eaten
+            if current_time - self.last_fruit_time >= 5000:  # 5 seconds in milliseconds
+                self.health -= 1  # Decrease health by 1
+                self.last_fruit_time = current_time  # Reset the timer
+                if self.health <= 0:
+                    self.game_over()
 
 #make sure the bullet only spawn when snake move
     def spawn_startbullet(self):
@@ -885,6 +921,32 @@ class MAIN:
         self.draw_score()
         self.draw_health_bar()
 
+        #draws selected map at top of the screen
+        if selected_map_name:
+            map_text_surface = game_font.render(f"{selected_map_name}", True, (255, 255, 255))
+            map_text_x = (cell_number * cell_size - map_text_surface.get_width()) // 2
+            screen.blit(map_text_surface, (map_text_x, 10))
+
+        if self.start_time is None:  # If the game hasn't started, display 00:00
+            timer_text = "00:00"
+        else:
+            if game_state == paused and self.paused_time is not None:
+             
+                elapsed_time = (self.paused_time - self.start_time - self.total_paused_duration) // 1000
+            else:
+                current_time = pygame.time.get_ticks()
+                elapsed_time = (current_time - self.start_time - self.total_paused_duration) // 1000
+
+            
+            minutes = elapsed_time // 60
+            seconds = elapsed_time % 60
+            timer_text = f"{minutes:02}:{seconds:02}"  # Format the time as Minute:Seconds
+
+        # Render the timer text
+        timer_surface = game_font.render(timer_text, True, (255, 255, 255))
+        timer_x = cell_number * cell_size - timer_surface.get_width() - 10 
+        screen.blit(timer_surface, (timer_x, 10))
+
     #Check snake eat apple
     def check_eat(self):
         if self.fruit.pos == self.snake.body[0]:
@@ -892,6 +954,10 @@ class MAIN:
             self.snake.add_block()
             self.snake.play_crunch_sound()
             scores.highscore+=1
+            current_time = pygame.time.get_ticks() - self.total_paused_duration
+            self.last_fruit_time = current_time
+            if self.health < 5: # Makes sure player dun go over 5 health when he eats fruit
+                self.health += 1
 
             
 #game over if hit its own body
@@ -907,11 +973,18 @@ class MAIN:
     def game_over(self):
         global game_state
         game_state = game_end
+        self.start_time = pygame.time.get_ticks()
+        self.reset()
     
     def reset(self):
         self.snake.reset()
         self.bullets = []
         self.health = 5
+        self.start_time = None  # Reset the timer
+        self.game_started = False  # Reset game start flag
+        self.last_fruit_time = None  # Reset the fruit timer
+        self.paused_time = None  # Reset paused time
+        self.total_paused_duration = 0  # Reset paused duration
 
 
     def draw_score(self):
@@ -967,6 +1040,10 @@ while True:
             if event.type == SCREEN_UPDATE:
                 main_game.update()
             if event.type == pygame.KEYDOWN:
+                if not main_game.game_started and event.key in [pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s, pygame.K_LEFT, pygame.K_a, pygame.K_RIGHT, pygame.K_d]:
+                    main_game.start_time = pygame.time.get_ticks()  # Start the timer
+                    main_game.game_started = True # Flag the game as started
+                    
                 if event.key == pygame.K_UP or event.key == pygame.K_w:
                     if main_game.snake.direction.y != 1:
                         main_game.snake.direction = Vector2(0, -1)
