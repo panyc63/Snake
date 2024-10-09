@@ -33,10 +33,9 @@ pygame.display.set_caption("Snake Attack")
 button_width = 300
 button_height = 50
 start_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 360), (button_width, button_height))
-settings_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 420), (button_width, button_height))
-mapSetting_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 480), (button_width, button_height))
-leaderscore_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 540), (button_width, button_height))
-quit_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 600), (button_width, button_height))
+mapSetting_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 420), (button_width, button_height))
+leaderscore_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 480), (button_width, button_height))
+quit_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 540), (button_width, button_height))
 
 
 def gameDifficulty():
@@ -299,14 +298,13 @@ def main_menu_screen():
 
         # Check if mouse is over any button
         start_hovered = start_button_rect.collidepoint(mouse_pos)
-        settings_hovered = settings_button_rect.collidepoint(mouse_pos)
         mapSettings_hovered = mapSetting_button_rect.collidepoint(mouse_pos)
         leaderscore_hovered = leaderscore_button_rect.collidepoint(mouse_pos)
         quit_hovered = quit_button_rect.collidepoint(mouse_pos)
 
         # Hover effects
         draw_button(start_button_rect, "Start", start_hovered)
-        draw_button(settings_button_rect, "Gameplay Settings", settings_hovered)
+        
         draw_button(mapSetting_button_rect, "Map Settings", mapSettings_hovered)
         draw_button(leaderscore_button_rect, "Highscore", leaderscore_hovered)
         draw_button(quit_button_rect, "Quit", quit_hovered)
@@ -322,9 +320,7 @@ def main_menu_screen():
                     print("Start button clicked")
                     gameDifficulty()
                     game_menu = False
-                #If Settings Button was pressed
-                elif settings_button_rect.collidepoint(mouse_pos):
-                    print("Gameplay Settings button clicked")
+
                     #If Settings Button was pressed
                 elif mapSetting_button_rect.collidepoint(mouse_pos):
                     print("Map Settings button clicked")
