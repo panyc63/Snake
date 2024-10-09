@@ -39,12 +39,12 @@ quit_button_rect = pygame.Rect((cell_size*cell_number // 2 - button_width // 2, 
 
 
 def gameDifficulty():
-
+    
     #Game Difficulty screen
     global game_state,grid,customGrid,selected_map_name
     gameDifficulty = True
     mapE = mapEditting()
-
+    selected_map_name = ""
 
     while gameDifficulty:
         screen.blit(game_menu_image, (0, 0))  # Set the background
@@ -356,7 +356,7 @@ def pause_menu_screen():
 
     # Tinted screen when paused
     tint_surface = pygame.Surface((cell_number * cell_size, cell_number * cell_size), pygame.SRCALPHA)
-    tint_surface.fill((0, 0, 0, 150))
+    tint_surface.fill((0, 0, 0, 150))  
 
     # Button dimensions and positions
     button_width = 200
@@ -366,9 +366,13 @@ def pause_menu_screen():
     menu_button_rect = pygame.Rect((cell_number * cell_size // 2 - button_width // 2, 420), (button_width, button_height))
 
     while pause_menu_active:
-        main_game.draw_elements()  # Keep the game elements drawn in the background
-        screen.blit(tint_surface, (0, 0))  # Apply the tinted overlay for the pause effect
+        # Keep the game elements drawn in the background
+        main_game.draw_elements()
 
+        # Apply the tinted overlay to give a "paused" effect
+        screen.blit(tint_surface, (0, 0))
+
+        # Render the "PAUSED" text
         paused_text_surface = game_font.render("PAUSED", True, (255, 255, 255))
         screen.blit(paused_text_surface, (cell_number * cell_size // 2 - paused_text_surface.get_width() // 2, 160))
 
@@ -396,7 +400,8 @@ def pause_menu_screen():
                     game_state = playing  # Resume game
                     pause_menu_active = False
                 elif restart_button_rect.collidepoint(mouse_pos):
-                    main_game.reset()
+                    main_game.snake.reset()
+                    main_game.bullets = []  # Reset bullets
                     game_state = playing
                     pause_menu_active = False
                 elif menu_button_rect.collidepoint(mouse_pos):
@@ -632,6 +637,7 @@ class WALL:
             y_pos = int(block.y * cell_size)
             wall_rect = pygame.Rect(x_pos, y_pos, cell_size, cell_size)
             screen.blit(middle_wall, wall_rect)
+
     def deleteWall(self):
         self.body = []
         pass
@@ -642,6 +648,7 @@ class WALL:
             if block == pos:
                 return True
             
+     #Check if snake collision with wall       
     def checkSnakeCollision(self,snake_head):
         for w in self.body:
             wallRect =(pygame.Rect(int(w[0] * cell_size) ,int(w[1] * cell_size),cell_size, cell_size))
@@ -732,21 +739,26 @@ class mapEditting:
 
     #Load Custom Map
     def loadMap(self):
+        global selected_map_name
         customGrid = []
         file_path = filedialog.askopenfilename(title="Select a Map File", filetypes=[("JSON files", "*.json")])
+        self.selected_map_name = os.path.basename(file_path)
         if file_path:  # Check if a file was selected
             with open(file_path, 'r') as file:
                 customGrid = json.load(file)
 
 
         return customGrid
+    
     def save_map(self):
+        global selected_map_name
         file_path = filedialog.asksaveasfilename(
         title="Save File",
         defaultextension=".json",  # Default file extension
         filetypes=[("json", "*.json"), ("All files", "*.*")]  # File type options
     )   
         try:
+            self.selected_map_name = os.path.basename(file_path)
             with open(file_path, 'w') as f:
                 json.dump(self.grid, f)
             return self.grid
