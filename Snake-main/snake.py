@@ -792,24 +792,25 @@ while True:
             if event.type == SCREEN_UPDATE:
                 main_game.update()
             if event.type == pygame.KEYDOWN:
-                if not main_game.game_started and event.key in [pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s, pygame.K_LEFT, pygame.K_a, pygame.K_RIGHT, pygame.K_d]:
+                if not main_game.game_started and event.key in [pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s, pygame.K_RIGHT, pygame.K_d]:
                     main_game.start_time = pygame.time.get_ticks()  # Start the timer
                     main_game.game_started = True # Flag the game as started
                     
-                if event.key == pygame.K_UP or event.key == pygame.K_w:
-                    if main_game.snake.direction.y != 1:
-                        main_game.snake.direction = Vector2(0, -1)
-                elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    if main_game.snake.direction.x != -1:
-                        main_game.snake.direction = Vector2(1, 0)
-                elif event.key == pygame.K_DOWN  or event.key == pygame.K_s:
-                    if main_game.snake.direction.y != -1:
-                        main_game.snake.direction = Vector2(0, 1)
-                elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    if main_game.snake.direction.x != 1:
-                        main_game.snake.direction = Vector2(-1, 0)
-                elif event.key == pygame.K_p:  # Check for pause key
-                    game_state = paused
+                if main_game.game_started:   
+                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+                        if main_game.snake.direction.y != 1:
+                            main_game.snake.direction = Vector2(0, -1)
+                    elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                        if main_game.snake.direction.x != -1:
+                            main_game.snake.direction = Vector2(1, 0)
+                    elif event.key == pygame.K_DOWN  or event.key == pygame.K_s:
+                        if main_game.snake.direction.y != -1:
+                            main_game.snake.direction = Vector2(0, 1)
+                    elif (event.key == pygame.K_LEFT or event.key == pygame.K_a):
+                        if main_game.snake.direction.x != 1:
+                            main_game.snake.direction = Vector2(-1, 0)
+                    elif event.key == pygame.K_p:  # Check for pause key
+                        game_state = paused
 
     if game_state == playing:
         main_game.draw_elements()
