@@ -1,9 +1,12 @@
 import pygame, sys, random ,os
 from pygame.math import Vector2
 import sqlitecloud
-import json
-import tkinter as tk
-from tkinter import filedialog
+from classes.snakeClass import SNAKE 
+from classes.bullet import BULLET
+from classes.fruit import FRUIT
+from classes.wall import WALL 
+from classes.mapEditting import mapEditting
+
 
 # Constants
 cell_size = 40
@@ -43,7 +46,7 @@ def gameDifficulty():
     #Game Difficulty screen
     global game_state,grid,customGrid,selected_map_name
     gameDifficulty = True
-    mapE = mapEditting()
+    mapE = mapEditting(screen)
     selected_map_name = ""
 
     while gameDifficulty:
@@ -132,7 +135,7 @@ def mapSetting():
     #Map Setting screen
     global game_state,customGrid
     mapEdit = True
-    mapE = mapEditting()
+    mapE = mapEditting(screen)
 
     while mapEdit:
         screen.blit(background_image, (0, 0))  # Set the background
@@ -512,274 +515,14 @@ def end_game_screen():
 
         pygame.display.flip()
 
-class SNAKE:
-    def __init__(self):
-        # Initialize the snake
-        self.body = [Vector2(5,10), Vector2(4,10), Vector2(3,10)]
-        self.direction = Vector2(0,0)
-        self.new_block = False
-        test=0
-        # Load images for snake parts
-        self.head_up = pygame.image.load(cwd+'/Snake-main/Graphics/head_up.png').convert_alpha()
-        self.head_down = pygame.image.load(cwd+'/Snake-main/Graphics/head_down.png').convert_alpha()
-        self.head_right = pygame.image.load(cwd+'/Snake-main/Graphics/head_right.png').convert_alpha()
-        self.head_left = pygame.image.load(cwd+'/Snake-main/Graphics/head_left.png').convert_alpha()
-        
-        self.tail_up = pygame.image.load(cwd+'/Snake-main/Graphics/tail_up.png').convert_alpha()
-        self.tail_down = pygame.image.load(cwd+'/Snake-main/Graphics/tail_down.png').convert_alpha()
-        self.tail_right = pygame.image.load(cwd+'/Snake-main/Graphics/tail_right.png').convert_alpha()
-        self.tail_left = pygame.image.load(cwd+'/Snake-main/Graphics/tail_left.png').convert_alpha()
-
-        self.body_vertical = pygame.image.load(cwd+'/Snake-main/Graphics/body_vertical.png').convert_alpha()
-        self.body_horizontal = pygame.image.load(cwd+'/Snake-main/Graphics/body_horizontal.png').convert_alpha()
-
-        self.body_tr = pygame.image.load(cwd+'/Snake-main/Graphics/body_tr.png').convert_alpha()
-        self.body_tl = pygame.image.load(cwd+'/Snake-main/Graphics/body_tl.png').convert_alpha()
-        self.body_br = pygame.image.load(cwd+'/Snake-main/Graphics/body_br.png').convert_alpha()
-        self.body_bl = pygame.image.load(cwd+'/Snake-main/Graphics/body_bl.png').convert_alpha()
-        self.crunch_sound = pygame.mixer.Sound(cwd+'/Snake-main/Sound/crunch.wav')
-
-    def draw_snake(self):
-        self.update_head_graphics()
-        self.update_tail_graphics()
-
-        for index, block in enumerate(self.body):
-            x_pos = int(block.x * cell_size)
-            y_pos = int(block.y * cell_size)
-            block_rect = pygame.Rect(x_pos, y_pos, cell_size, cell_size)
-
-            #The direction the Snake is facing 
-            if index == 0:
-                screen.blit(self.head, block_rect)
-            #tail
-            elif index == len(self.body) - 1:
-                screen.blit(self.tail, block_rect)
-            else:
-                previous_block = self.body[index + 1] - block
-                next_block = self.body[index - 1] - block
-                if previous_block.x == next_block.x:
-                    screen.blit(self.body_vertical, block_rect)
-                elif previous_block.y == next_block.y:
-                    screen.blit(self.body_horizontal, block_rect)
-                else:
-                    if previous_block.x == -1 and next_block.y == -1 or previous_block.y == -1 and next_block.x == -1:
-                        screen.blit(self.body_tl, block_rect)
-                    elif previous_block.x == -1 and next_block.y == 1 or previous_block.y == 1 and next_block.x == -1:
-                        screen.blit(self.body_bl, block_rect)
-                    elif previous_block.x == 1 and next_block.y == -1 or previous_block.y == -1 and next_block.x == 1:
-                        screen.blit(self.body_tr, block_rect)
-                    elif previous_block.x == 1 and next_block.y == 1 or previous_block.y == 1 and next_block.x == 1:
-                        screen.blit(self.body_br, block_rect)
-
-    def update_head_graphics(self):
-        head_relation = self.body[1] - self.body[0]
-        if head_relation == Vector2(1,0): self.head = self.head_left
-        elif head_relation == Vector2(-1,0): self.head = self.head_right
-        elif head_relation == Vector2(0,1): self.head = self.head_up
-        elif head_relation == Vector2(0,-1): self.head = self.head_down
-
-    def update_tail_graphics(self):
-        tail_relation = self.body[-2] - self.body[-1]
-        if tail_relation == Vector2(1,0): self.tail = self.tail_left
-        elif tail_relation == Vector2(-1,0): self.tail = self.tail_right
-        elif tail_relation == Vector2(0,1): self.tail = self.tail_up
-        elif tail_relation == Vector2(0,-1): self.tail = self.tail_down
-
-    def move_snake(self):
-        if self.direction != Vector2(0, 0):
-            if self.new_block:
-                body_copy = self.body[:]
-                body_copy.insert(0, body_copy[0] + self.direction)
-                self.body = body_copy[:]
-                self.new_block = False
-            else:
-                body_copy = self.body[:-1]
-                body_copy.insert(0, body_copy[0] + self.direction)
-                self.body = body_copy[:]
-
-    def add_block(self):
-        self.new_block = True
-
-    def play_crunch_sound(self):
-        self.crunch_sound.play()
-
-    def reset(self):
-        self.body = [Vector2(5,10), Vector2(4,10), Vector2(3,10)]
-        self.direction = Vector2(0,0)
-
-class FRUIT:
-    def __init__(self):
-        self.pos = Vector2(0,0)
-        self.randomize()
-
-    def draw_fruit(self):
-        fruit_rect = pygame.Rect(int(self.pos.x * cell_size), int(self.pos.y * cell_size), cell_size, cell_size)
-        screen.blit(apple2, fruit_rect)
-
-    def randomize(self):
-        self.x = random.randint(0, cell_number - 1)
-        self.y = random.randint(0, cell_number - 1)
-        self.pos = Vector2(self.x, self.y)
-
-class WALL:
-    def __init__(self):
-        self.body = []
-
-    def dynamicWall(self,grid):
-        for yCount,i in enumerate(grid):
-            for xCount,x in enumerate(i):
-                if x == 1:
-                    self.body.append(Vector2(xCount,yCount))
-
-    def create_Wall(self):
-         for index, block in enumerate(self.body):
-            x_pos = int(block.x * cell_size)
-            y_pos = int(block.y * cell_size)
-            wall_rect = pygame.Rect(x_pos, y_pos, cell_size, cell_size)
-            screen.blit(middle_wall, wall_rect)
-
-    def deleteWall(self):
-        self.body = []
-        pass
-
-    #Check if apple is same position as wall
-    def checkCollision(self,pos):
-        for block in self.body:
-            if block == pos:
-                return True
-            
-     #Check if snake collision with wall       
-    def checkSnakeCollision(self,snake_head):
-        for w in self.body:
-            wallRect =(pygame.Rect(int(w[0] * cell_size) ,int(w[1] * cell_size),cell_size, cell_size))
-            if snake_head.colliderect(wallRect):
-                return True
-            
-class BULLET:
-    def __init__(self, position, direction):
-        self.position = position
-        self.direction = direction
-        self.speed = 0.2  # Adjust the speed as needed
-        self.radius = cell_size // 4  # Smaller circle
-        self.color = (0, 0, 255)  # BLUE color
-
-    def move(self):
-        
-        self.position += self.direction * self.speed
-
-    def draw_bullet(self):
-        # Draw the bullet as a small circle
-        pixel_position = (int(self.position.x * cell_size), int(self.position.y * cell_size))
-        pygame.draw.circle(screen, self.color, pixel_position, self.radius)
-
-class mapEditting:
-    def __init__(self):
-        root = tk.Tk()
-        root.withdraw()
-        self.WIDTH = cell_size*cell_number
-        self.HEIGHT = cell_size*cell_number
-        self.TILE_SIZE = 40
-        self.GRID_WIDTH = self.WIDTH // self.TILE_SIZE
-        self.GRID_HEIGHT = self.HEIGHT // self.TILE_SIZE
-        self.WHITE = (255, 255, 255)
-        self.BLACK = (0, 0, 0)
-        self.RED = (255, 0, 0)
-        self.grid = [[0 for _ in range(self.GRID_WIDTH)] for _ in range(self.GRID_HEIGHT)]
 
 
-    def createMap(self):
-        global customGrid
-        running = True
-        dragging = False
-        draggingDelete = False
-        while running:
-            screen.fill(self.BLACK)
-            screen.blit(background_image, (0, 0))  # Draw the background image
-
-            self.drawGrid()
-
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 1:  # Left click to place a tile
-                        dragging = True
-                        x, y = event.pos
-                        self.grid[y // self.TILE_SIZE][x // self.TILE_SIZE] = 1  # Place a tile
-                    elif event.button == 3:  # Right click to remove a tile
-                        draggingDelete = True
-                        x, y = event.pos
-                        self.grid[y // self.TILE_SIZE][x // self.TILE_SIZE] = 0  # Remove a tile
-                elif event.type == pygame.MOUSEBUTTONUP:
-                    dragging = False
-                    draggingDelete = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_s:  # Save map
-                        customGrid = self.save_map()
-                        running = False
-                    elif event.key == pygame.K_b:
-                        running = False
-
-                if dragging:
-                    circle_pos = pygame.mouse.get_pos()
-                    x =circle_pos[1]             
-                    y = circle_pos[0]
-                    self.grid[x // self.TILE_SIZE][y// self.TILE_SIZE] = 1
-                if draggingDelete:
-                    circle_pos = pygame.mouse.get_pos()
-                    x =circle_pos[1]             
-                    y = circle_pos[0]
-                    self.grid[x // self.TILE_SIZE][y// self.TILE_SIZE] = 0
-
-            pygame.display.flip()
-    def loadSpecificMap(self,mapName):
-        with open(cwd+"/Snake-main/"+mapName, 'r') as f:
-            grid = json.load(f)
-        return grid
-
-    #Load Custom Map
-    def loadMap(self):
-        global selected_map_name
-        customGrid = []
-        file_path = filedialog.askopenfilename(title="Select a Map File", filetypes=[("JSON files", "*.json")])
-        self.selected_map_name = os.path.basename(file_path)
-        if file_path:  # Check if a file was selected
-            with open(file_path, 'r') as file:
-                customGrid = json.load(file)
-
-
-        return customGrid
-    
-    def save_map(self):
-        global selected_map_name
-        file_path = filedialog.asksaveasfilename(
-        title="Save File",
-        defaultextension=".json",  # Default file extension
-        filetypes=[("json", "*.json"), ("All files", "*.*")]  # File type options
-    )   
-        try:
-            self.selected_map_name = os.path.basename(file_path)
-            with open(file_path, 'w') as f:
-                json.dump(self.grid, f)
-            return self.grid
-        except FileNotFoundError:
-            pass
-
-    def drawGrid(self):
-        for y in range(self.GRID_HEIGHT):
-            for x in range(self.GRID_WIDTH):
-                rect = pygame.Rect(x * self.TILE_SIZE, y * self.TILE_SIZE, self.TILE_SIZE, self.TILE_SIZE)
-                # Only draw the outline, no fill
-                if self.grid[y][x] == 1:  # Filled
-                    pygame.draw.rect(screen, self.RED, rect)
-                pygame.draw.rect(screen, self.BLACK, rect, 1)  # Draw the outline of the square
-              
 
 class MAIN:
     def __init__(self):
-        self.snake = SNAKE()
-        self.fruit = FRUIT()
-        self.wall = WALL()
+        self.snake = SNAKE(screen)
+        self.fruit = FRUIT(screen)
+        self.wall = WALL(screen)
         self.bullets = []
         self.health = 5  # Player starts with 5 health points
         #get time of inititation which is 0 when starting
@@ -896,7 +639,7 @@ class MAIN:
             direction = Vector2(-1, 0)
 
         position = Vector2(x, y)
-        bullet = BULLET(position, direction)
+        bullet = BULLET(position, direction,screen)
         self.bullets.append(bullet)
 
     # Draw Health Bar
@@ -1022,8 +765,6 @@ cell_number = 20
 screen = pygame.display.set_mode((cell_number * cell_size, cell_number * cell_size))
 clock = pygame.time.Clock()
 apple = pygame.image.load(cwd+ '/Snake-main/Graphics/apple.png').convert_alpha()
-apple2 =pygame.image.load(cwd+'/Snake-main/Graphics/apple2.png').convert_alpha()
-middle_wall =pygame.image.load(cwd+'/Snake-main/Graphics/middle_wall.png').convert_alpha()
 left_wall = pygame.image.load(cwd+'/Snake-main/Graphics/left_wall.png').convert_alpha()
 right_wall = pygame.image.load(cwd+'/Snake-main/Graphics/right_wall.png').convert_alpha()
 game_font = pygame.font.Font(cwd+'/Snake-main/Font/PoetsenOne-Regular.ttf', 25)
