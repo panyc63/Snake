@@ -78,15 +78,16 @@ class mapEditting:
     #Load Custom Map
     def loadMap(self):
         global selected_map_name
-        customGrid = []
         file_path = filedialog.askopenfilename(title="Select a Map File", filetypes=[("JSON files", "*.json")])
         self.selected_map_name = os.path.basename(file_path)
         if file_path:  # Check if a file was selected
             with open(file_path, 'r') as file:
                 customGrid = json.load(file)
 
-
-        return customGrid
+            return customGrid
+        else:
+            return None
+    
     
     def save_map(self):
         global selected_map_name

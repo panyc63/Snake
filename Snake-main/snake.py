@@ -121,13 +121,14 @@ def gameDifficulty():
                 elif customMap_button_rect.collidepoint(mouse_pos):
                     if not customGrid:
                         grid = mapE.loadMap()
-                        customGrid = grid
-                        game_state = playing
-                        gameDifficulty = False
-                    elif not customGrid == []:
+                        if grid: 
+                            game_state = playing
+                            gameDifficulty = False
+                    elif customGrid != []:
                         grid = customGrid                            
                         game_state = playing
                         gameDifficulty = False
+
         pygame.display.flip()      
 
 def mapSetting():
@@ -147,7 +148,7 @@ def mapSetting():
         loadMap_hovered = loadMap_button_rect.collidepoint(mouse_pos)
         createMap_hovered = createMap_button_rect.collidepoint(mouse_pos)
         backButtonMap_hovered = backMap_button_rect.collidepoint(mouse_pos)
-        screen.blit(map_Instruction,(200,60))
+        screen.blit(map_Instruction,(50,60))
         draw_button(loadMap_button_rect, "Load Map", loadMap_hovered) 
         draw_button(createMap_button_rect, "Create Map", createMap_hovered) 
         draw_button(backMap_button_rect, "Back", backButtonMap_hovered) 
