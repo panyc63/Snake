@@ -20,6 +20,7 @@ main_menu = 0
 playing = 1
 game_end = 2
 paused = 3
+overlay=4
 grid = []
 customGrid =[]
 game_state = main_menu
@@ -94,39 +95,39 @@ def gameDifficulty():
                 elif map1_button_rect.collidepoint(mouse_pos):
                     grid = mapE.loadSpecificMap("map1.json")
                     selected_map_name = "Map 1"
-                    game_state = playing
+                    game_state = overlay
                     gameDifficulty = False
                 elif map2_button_rect.collidepoint(mouse_pos):
                     grid = mapE.loadSpecificMap("map2.json")
                     selected_map_name = "Map 2"
-                    game_state = playing
+                    game_state = overlay
                     gameDifficulty = False
 
                 elif map3_button_rect.collidepoint(mouse_pos):
                     grid = mapE.loadSpecificMap("map3.json")
                     selected_map_name = "Map 3"
-                    game_state = playing
+                    game_state = overlay
                     gameDifficulty = False
                 elif map4_button_rect.collidepoint(mouse_pos):
                     grid = mapE.loadSpecificMap("map4.json")
                     selected_map_name = "Map 4"
-                    game_state = playing
+                    game_state = overlay
                     gameDifficulty = False
                 elif map5_button_rect.collidepoint(mouse_pos):
                     grid = mapE.loadSpecificMap("map5.json")
                     selected_map_name = "Map 5"
-                    game_state = playing
+                    game_state = overlay
                     gameDifficulty = False
 
                 elif customMap_button_rect.collidepoint(mouse_pos):
                     if not customGrid:
                         grid = mapE.loadMap()
                         customGrid = grid
-                        game_state = playing
+                        game_state = overlay
                         gameDifficulty = False
                     elif not customGrid == []:
                         grid = customGrid                            
-                        game_state = playing
+                        game_state = overlay
                         gameDifficulty = False
         pygame.display.flip()      
 
@@ -764,6 +765,9 @@ cell_size = 40
 cell_number = 20
 screen = pygame.display.set_mode((cell_number * cell_size, cell_number * cell_size))
 clock = pygame.time.Clock()
+# Load the overlay image
+start_overlay = pygame.image.load(cwd + '/Snake-main/Graphics/GameInstruction.png').convert_alpha()
+start_overlay = pygame.transform.scale(start_overlay, (cell_number * cell_size, cell_number * cell_size))
 apple = pygame.image.load(cwd+ '/Snake-main/Graphics/apple.png').convert_alpha()
 left_wall = pygame.image.load(cwd+'/Snake-main/Graphics/left_wall.png').convert_alpha()
 right_wall = pygame.image.load(cwd+'/Snake-main/Graphics/right_wall.png').convert_alpha()
@@ -777,6 +781,7 @@ game_over_image = pygame.image.load(cwd+'/Snake-main/Graphics/game_over_image.pn
 # Setup timers
 SCREEN_UPDATE = pygame.USEREVENT
 pygame.time.set_timer(SCREEN_UPDATE, 150)
+
 
 
 main_game = MAIN()
@@ -816,6 +821,16 @@ while True:
         main_game.draw_elements()
     elif game_state == main_menu:
         main_menu_screen()
+    elif game_state == overlay:
+        # Display the overlay image
+        screen.blit(start_overlay, (0, 0))
+        pygame.display.flip()
+
+        # Listen for any movement key press to transition to playing state
+        keys = pygame.key.get_pressed()
+        if any(keys[key] for key in [pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s,
+                                    pygame.K_LEFT, pygame.K_a, pygame.K_RIGHT, pygame.K_d]):
+            game_state = playing  # Transition to playing state
     elif game_state == game_end:
         main_game.reset()
         end_game_screen()
